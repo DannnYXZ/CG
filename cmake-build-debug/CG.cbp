@@ -285,6 +285,9 @@
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
 			<Option target="CG"/>
 		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/shader.h">
+			<Option target="CG"/>
+		</Unit>
 		<Unit filename="/home/noroot/projects/CG/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>

@@ -61,4 +61,20 @@ GLFW/glfw3.h
 -
 iostream
 -
+cmath
+-
+shader.h
+/home/noroot/projects/CG/src/shader.h
+
+/home/noroot/projects/CG/src/shader.h
+glad/glad.h
+-
+string
+-
+fstream
+-
+sstream
+-
+iostream
+-
 

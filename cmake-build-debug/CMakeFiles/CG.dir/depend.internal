@@ -8,3 +8,4 @@ CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glad/glad.h
  ../deps/glfw/include/GLFW/glfw3.h
  /home/noroot/projects/CG/src/main.cpp
+ /home/noroot/projects/CG/src/shader.h
