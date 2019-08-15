@@ -14,7 +14,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
-static void loadTexture(uint &id, const std::string &path);
+static void load2DTexture(uint &id, const std::string &path, bool alpha = false);
 
 float vertices[] = {
         // positions          // colors           // texture coords
@@ -82,12 +82,12 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind VBO
     glBindVertexArray(0);
 
-    uint boxTexture, wallTexture;
-    loadTexture(boxTexture, "assets/container.jpg");
-    loadTexture(wallTexture, "assets/wall.jpg");
+    uint boxTexture, faceTexture;
+    load2DTexture(boxTexture, "assets/container.jpg");
+    load2DTexture(faceTexture, "assets/triangle.png", true);
     textureShader.use();
-    textureShader.setInt("texSampler1", 0);
-    textureShader.setInt("texSampler2", 1);
+    textureShader.setInt("texSampler0", 0);
+    textureShader.setInt("texSampler1", 1);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -95,11 +95,11 @@ int main() {
         //rainbowShader.use();
         //posColorShader.use();
         //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-        //glActiveTexture(GL_TEXTURE0);
+        //glActiveTexture(GL_TEXTURE0)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, boxTexture);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, wallTexture);
+        glBindTexture(GL_TEXTURE_2D, faceTexture);
         textureShader.use();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -111,7 +111,7 @@ int main() {
     return 0;
 }
 
-static void loadTexture(uint &id, const std::string &path) {
+static void load2DTexture(uint &id, const std::string &path, bool alpha) {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -119,13 +119,16 @@ static void loadTexture(uint &id, const std::string &path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height, nrChannels;
+    if (alpha)
+        stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        alpha
+        ? glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
+        : glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
+    } else
         std::cout << "Failed to load texture: " << path << std::endl;
-    }
     stbi_image_free(data);
 }
 
