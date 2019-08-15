@@ -222,6 +222,33 @@ deps/glad.c.s:
 	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/deps/glad.c.s
 .PHONY : deps/glad.c.s
 
+deps/stb_image/stb_image.o: deps/stb_image/stb_image.cpp.o
+
+.PHONY : deps/stb_image/stb_image.o
+
+# target to build an object file
+deps/stb_image/stb_image.cpp.o:
+	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o
+.PHONY : deps/stb_image/stb_image.cpp.o
+
+deps/stb_image/stb_image.i: deps/stb_image/stb_image.cpp.i
+
+.PHONY : deps/stb_image/stb_image.i
+
+# target to preprocess a source file
+deps/stb_image/stb_image.cpp.i:
+	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.i
+.PHONY : deps/stb_image/stb_image.cpp.i
+
+deps/stb_image/stb_image.s: deps/stb_image/stb_image.cpp.s
+
+.PHONY : deps/stb_image/stb_image.s
+
+# target to generate assembly for a file
+deps/stb_image/stb_image.cpp.s:
+	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.s
+.PHONY : deps/stb_image/stb_image.cpp.s
+
 src/main.o: src/main.cpp.o
 
 .PHONY : src/main.o
@@ -267,6 +294,9 @@ help:
 	@echo "... deps/glad.o"
 	@echo "... deps/glad.i"
 	@echo "... deps/glad.s"
+	@echo "... deps/stb_image/stb_image.o"
+	@echo "... deps/stb_image/stb_image.i"
+	@echo "... deps/stb_image/stb_image.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

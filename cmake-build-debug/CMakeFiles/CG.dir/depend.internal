@@ -4,8 +4,12 @@
 CMakeFiles/CG.dir/deps/glad.c.o
  ../deps/glad/glad.h
  /home/noroot/projects/CG/deps/glad.c
+CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o
+ /home/noroot/projects/CG/deps/stb_image/stb_image.cpp
+ /home/noroot/projects/CG/deps/stb_image/stb_image.h
 CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glad/glad.h
  ../deps/glfw/include/GLFW/glfw3.h
+ ../deps/stb_image/stb_image.h
  /home/noroot/projects/CG/src/main.cpp
  /home/noroot/projects/CG/src/shader.h

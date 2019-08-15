@@ -71,7 +71,7 @@ CMAKE_BINARY_DIR = /home/noroot/projects/CG/cmake-build-debug
 CMakeFiles/CG.dir/all: deps/glfw/src/CMakeFiles/glfw.dir/all
 	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/depend
 	$(MAKE) -f CMakeFiles/CG.dir/build.make CMakeFiles/CG.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/noroot/projects/CG/cmake-build-debug/CMakeFiles --progress-num=1,2,3 "Built target CG"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/noroot/projects/CG/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4 "Built target CG"
 .PHONY : CMakeFiles/CG.dir/all
 
 # Include target in all.
@@ -81,7 +81,7 @@ all: CMakeFiles/CG.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/CG.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/noroot/projects/CG/cmake-build-debug/CMakeFiles 20
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/noroot/projects/CG/cmake-build-debug/CMakeFiles 21
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/CG.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/noroot/projects/CG/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/CG.dir/rule
@@ -177,7 +177,7 @@ deps/glfw/src/preinstall:
 deps/glfw/src/CMakeFiles/glfw.dir/all:
 	$(MAKE) -f deps/glfw/src/CMakeFiles/glfw.dir/build.make deps/glfw/src/CMakeFiles/glfw.dir/depend
 	$(MAKE) -f deps/glfw/src/CMakeFiles/glfw.dir/build.make deps/glfw/src/CMakeFiles/glfw.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/noroot/projects/CG/cmake-build-debug/CMakeFiles --progress-num=4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 "Built target glfw"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/noroot/projects/CG/cmake-build-debug/CMakeFiles --progress-num=5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21 "Built target glfw"
 .PHONY : deps/glfw/src/CMakeFiles/glfw.dir/all
 
 # Include target in all.

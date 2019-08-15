@@ -282,6 +282,12 @@
 		<Unit filename="/home/noroot/projects/CG/deps/glfw/src/xkb_unicode.h">
 			<Option target="glfw"/>
 		</Unit>
+		<Unit filename="/home/noroot/projects/CG/deps/stb_image/stb_image.cpp">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/deps/stb_image/stb_image.h">
+			<Option target="CG"/>
+		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
 			<Option target="CG"/>
 		</Unit>

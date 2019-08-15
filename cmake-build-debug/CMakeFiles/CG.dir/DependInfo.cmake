@@ -15,6 +15,7 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
   "../deps/glfw/include"
   )
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/noroot/projects/CG/deps/stb_image/stb_image.cpp" "/home/noroot/projects/CG/cmake-build-debug/CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o"
   "/home/noroot/projects/CG/src/main.cpp" "/home/noroot/projects/CG/cmake-build-debug/CMakeFiles/CG.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
