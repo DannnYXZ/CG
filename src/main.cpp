@@ -5,8 +5,14 @@
 #include <stb_image/stb_image.h>
 #include "shader.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
+
 const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_HEIGHT = 800;
 
 static void error_callback(int error, const char *description);
 
@@ -18,10 +24,10 @@ static void load2DTexture(uint &id, const std::string &path, bool alpha = false)
 
 float vertices[] = {
         // positions          // colors           // texture coords
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom right
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,   // top right
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,   // bottom right
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom left
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f    // top left
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f    // top left
 };
 
 uint indices[] = {
@@ -88,6 +94,9 @@ int main() {
     textureShader.use();
     textureShader.setInt("texSampler0", 0);
     textureShader.setInt("texSampler1", 1);
+
+
+    uint transformLoc = glGetUniformLocation(textureShader.ID, "transform");
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -96,12 +105,28 @@ int main() {
         //posColorShader.use();
         //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
         //glActiveTexture(GL_TEXTURE0)
+
+        mat4 transform(1.0f);
+        float time = glfwGetTime() * 0.5;
+        float sin_time = sin(time);
+        transform = translate(transform, vec3(0.1, 0.0, 0));
+        transform = rotate(transform, time, vec3(0, 0, 1));
+        transform = scale(transform, vec3(sin_time, sin_time, sin_time));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, value_ptr(transform));
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, boxTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, faceTexture);
         textureShader.use();
         glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        mat4 move(1.0f);
+        move = translate(move, vec3(-0.5, 0.5, 0));
+        sin_time = sin(half_pi<float>() + time);
+        move = scale(move, vec3(sin_time, sin_time, sin_time));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, value_ptr(move));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         //glDrawArrays(GL_TRIANGLES, 0, 3);
         glfwSwapBuffers(window);
