@@ -24,10 +24,43 @@ static void load2DTexture(uint &id, const std::string &path, bool alpha = false)
 
 float vertices[] = {
         // positions          // colors           // texture coords
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,   // top right
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom left
-        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f    // top left
+        0.9, 0.9, 0.0, 1.0, 0.0, 0.0, 2.0, 2.0,   // top right
+        0.9, -0.9, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0,   // bottom right
+        -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,   // bottom left
+        -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0    // top left
+};
+
+float cube[] = {
+        // front
+        0.5, 0.5, 0.5, 0, 0,
+        0.5, -0.5, 0.5, 1, 0,
+        -0.5, 0.5, 0.5, 0, 1,
+        -0.5, -0.5, 0.5, 1, 1,
+        // back
+        0.5, 0.5, -0.5, 0, 0,
+        0.5, -0.5, -0.5, 1, 0,
+        -0.5, 0.5, -0.5, 0, 1,
+        -0.5, -0.5, -0.5, 1, 1,
+        // left
+        0.5, 0.5, -0.5, 0, 0,
+        0.5, 0.5, 0.5, 1, 0,
+        0.5, -0.5, -0.5, 0, 1,
+        0.5, -0.5, 0.5, 1, 1,
+        // right
+        -0.5, 0.5, -0.5, 0, 0,
+        -0.5, 0.5, 0.5, 1, 0,
+        -0.5, -0.5, -0.5, 0, 1,
+        -0.5, -0.5, 0.5, 1, 1,
+        // up
+        0.5, 0.5, -0.5, 0, 0,
+        0.5, 0.5, 0.5, 1, 0,
+        -0.5, 0.5, -0.5, 0, 1,
+        -0.5, 0.5, 0.5, 1, 1,
+        // down
+        0.5, -0.5, -0.5, 0, 0,
+        0.5, -0.5, 0.5, 1, 0,
+        -0.5, -0.5, -0.5, 0, 1,
+        -0.5, -0.5, 0.5, 1, 1,
 };
 
 uint indices[] = {
@@ -47,7 +80,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -60,22 +93,22 @@ int main() {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-
     Shader rainbowShader("shaders/rainbowShader.vs", "shaders/rainbowShader.fs");
     Shader posColorShader("shaders/posColor.vs", "shaders/posColor.fs");
     Shader textureShader("shaders/texture.vs", "shaders/texture.fs");
+    Shader cubeShader("shaders/3D.vs", "shaders/3D.fs");
 
-    uint VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    uint planeVAO, planeVBO, EBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
     glGenBuffers(1, &EBO);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(planeVAO);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, 0);
@@ -85,50 +118,76 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 32, (void *) (6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind VBO
-    glBindVertexArray(0);
+    uint cubeVAO, cubeVBO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
 
-    uint boxTexture, faceTexture;
-    load2DTexture(boxTexture, "assets/container.jpg");
-    load2DTexture(faceTexture, "assets/triangle.png", true);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 20, (void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 20, (void *) 12);
+    glEnableVertexAttribArray(1);
+
+    uint woodTexture, eyeTexture;
+    load2DTexture(woodTexture, "assets/container.jpg");
+    load2DTexture(eyeTexture, "assets/triangle.png", true);
     textureShader.use();
     textureShader.setInt("texSampler0", 0);
     textureShader.setInt("texSampler1", 1);
+    cubeShader.use();
+    cubeShader.setInt("texSampler0", 0);
+    cubeShader.setInt("texSampler1", 1);
 
 
-    uint transformLoc = glGetUniformLocation(textureShader.ID, "transform");
+    uint planeModelUniform = glGetUniformLocation(textureShader.ID, "model");
+    uint planeViewUniform = glGetUniformLocation(textureShader.ID, "view");
+    uint planeProjUniform = glGetUniformLocation(textureShader.ID, "projection");
+
+    uint cubeModelUniform = glGetUniformLocation(cubeShader.ID, "model");
+    uint cubeViewUniform = glGetUniformLocation(cubeShader.ID, "view");
+    uint cubeProjUniform = glGetUniformLocation(cubeShader.ID, "projection");
+
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        //rainbowShader.use();
-        //posColorShader.use();
-        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-        //glActiveTexture(GL_TEXTURE0)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        mat4 transform(1.0f);
-        float time = glfwGetTime() * 0.5;
-        float sin_time = sin(time);
-        transform = translate(transform, vec3(0.1, 0.0, 0));
-        transform = rotate(transform, time, vec3(0, 0, 1));
-        transform = scale(transform, vec3(sin_time, sin_time, sin_time));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, value_ptr(transform));
+        float time = glfwGetTime();
+        mat4 model(1.0f);
+        mat4 view(1.0f);
+        view = translate(view, vec3(0, 0, -3));
+        mat4 projection;
+        projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, boxTexture);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, faceTexture);
+        glBindTexture(GL_TEXTURE_2D, eyeTexture);
+
+
         textureShader.use();
-        glBindVertexArray(VAO);
+        model = rotate(model, radians(-55.f), vec3(1, 0, 0));
+        glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
+        glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
+
+        glBindVertexArray(planeVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        mat4 move(1.0f);
-        move = translate(move, vec3(-0.5, 0.5, 0));
-        sin_time = sin(half_pi<float>() + time);
-        move = scale(move, vec3(sin_time, sin_time, sin_time));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, value_ptr(move));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        cubeShader.use();
+        model = rotate(model, time, vec3(1, 0, 0));
+        model = rotate(model, time, vec3(0, 1, 0));
+        glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
+        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
+
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
