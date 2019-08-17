@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(CG)
 
 set(CMAKE_CXX_STANDARD 14)
-add_executable(CG src/main.cpp deps/glad.c src/shader.h deps/stb_image/stb_image.h deps/stb_image/stb_image.cpp)
+add_executable(CG src/main.cpp deps/glad.c src/shader.h deps/stb_image/stb_image.h deps/stb_image/stb_image.cpp src/camera.h)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

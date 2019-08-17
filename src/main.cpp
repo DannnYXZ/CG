@@ -4,10 +4,13 @@
 #include <cmath>
 #include <stb_image/stb_image.h>
 #include "shader.h"
+#include "camera.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 using namespace glm;
 
@@ -152,6 +155,7 @@ int main() {
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
+    //Camera camera(vec3(0, 0, 3),);
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -160,7 +164,7 @@ int main() {
         mat4 model(1.0f);
         mat4 view(1.0f);
         view = translate(view, vec3(0, 0, -3));
-        mat4 projection;
+        mat4 projection(1);
         projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
 
         glActiveTexture(GL_TEXTURE0);
@@ -170,7 +174,7 @@ int main() {
 
 
         textureShader.use();
-        model = rotate(model, radians(-55.f), vec3(1, 0, 0));
+        //model = rotate(model, radians(-55.f), vec3(1, 0, 0));
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
         glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
@@ -179,14 +183,32 @@ int main() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         cubeShader.use();
-        model = rotate(model, time, vec3(1, 0, 0));
-        model = rotate(model, time, vec3(0, 1, 0));
         glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
         glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
         glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
 
+        vec3 cubePositions[] = {
+                vec3(0.0f, 0.0f, 0.0f),
+                vec3(2.0f, 5.0f, -15.0f),
+                vec3(-1.5f, -2.2f, -2.5f),
+                vec3(-3.8f, -2.0f, -12.3f),
+                vec3(2.4f, -0.4f, -3.5f),
+                vec3(-1.7f, 3.0f, -7.5f),
+                vec3(1.3f, -2.0f, -2.5f),
+                vec3(1.5f, 2.0f, -2.5f),
+                vec3(1.5f, 0.2f, -1.5f),
+                vec3(-1.3f, 1.0f, -1.5f)
+        };
+
         glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+        for (unsigned int i = 0; i < 10; i++) {
+            float angle = 20.0f * i;
+            mat4 _model(1.f);
+            _model = translate(_model, cubePositions[i]);
+            _model = rotate(_model, radians(angle), vec3(1.0f, 0.3f, 0.5f));
+            glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(_model));
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

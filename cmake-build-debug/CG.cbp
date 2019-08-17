@@ -288,6 +288,9 @@
 		<Unit filename="/home/noroot/projects/CG/deps/stb_image/stb_image.h">
 			<Option target="CG"/>
 		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/camera.h">
+			<Option target="CG"/>
+		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
 			<Option target="CG"/>
 		</Unit>
