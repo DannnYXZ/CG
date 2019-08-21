@@ -288,13 +288,22 @@
 		<Unit filename="/home/noroot/projects/CG/deps/stb_image/stb_image.h">
 			<Option target="CG"/>
 		</Unit>
-		<Unit filename="/home/noroot/projects/CG/src/camera.h">
+		<Unit filename="/home/noroot/projects/CG/src/camera_controller.h">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/fps_camera.h">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/look_at_camera.h">
 			<Option target="CG"/>
 		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
 			<Option target="CG"/>
 		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/shader.h">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/utils.h">
 			<Option target="CG"/>
 		</Unit>
 		<Unit filename="/home/noroot/projects/CG/CMakeLists.txt">

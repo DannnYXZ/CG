@@ -4,7 +4,9 @@
 #include <cmath>
 #include <stb_image/stb_image.h>
 #include "shader.h"
-#include "camera.h"
+#include "look_at_camera.h"
+#include "fps_camera.h"
+#include "camera_controller.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,16 +16,20 @@
 
 using namespace glm;
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 800;
+unsigned int SCR_WIDTH = 800;
+unsigned int SCR_HEIGHT = 800;
 
 static void error_callback(int error, const char *description);
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
+static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos);
+
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 static void load2DTexture(uint &id, const std::string &path, bool alpha = false);
+
+static void process_input(GLFWwindow *window);
 
 float vertices[] = {
         // positions          // colors           // texture coords
@@ -35,10 +41,10 @@ float vertices[] = {
 
 float cube[] = {
         // front
-        0.5, 0.5, 0.5, 0, 0,
+        0.5, 0.5, 0.5, 1, 1,
         0.5, -0.5, 0.5, 1, 0,
         -0.5, 0.5, 0.5, 0, 1,
-        -0.5, -0.5, 0.5, 1, 1,
+        -0.5, -0.5, 0.5, 0, 0,
         // back
         0.5, 0.5, -0.5, 0, 0,
         0.5, -0.5, -0.5, 1, 0,
@@ -77,6 +83,17 @@ float texCoords[] = {
         0.5f, 1.0f
 };
 
+
+LookAtCamera look_at_camera(vec3(0, 0, 3), vec3(0, 0, 0), vec3(0, 1, 0));
+FPSCamera fps_camera(vec3(0, 0, 3));
+CameraController fps_controller(&fps_camera);
+float timestamp;
+float deltatime;
+double last_mouse_x, last_mouse_y;
+
+
+mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+
 int main() {
     glfwSetErrorCallback(error_callback);
     glfwInit();
@@ -90,6 +107,8 @@ int main() {
         return -1;
     }
     glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
@@ -153,25 +172,33 @@ int main() {
     uint cubeViewUniform = glGetUniformLocation(cubeShader.ID, "view");
     uint cubeProjUniform = glGetUniformLocation(cubeShader.ID, "projection");
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glLineWidth(3);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
-    //Camera camera(vec3(0, 0, 3),);
+
     while (!glfwWindowShouldClose(window)) {
+        float time = glfwGetTime();
+        deltatime = time - timestamp;
+        timestamp = time;
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        float time = glfwGetTime();
-        mat4 model(1.0f);
-        mat4 view(1.0f);
-        view = translate(view, vec3(0, 0, -3));
-        mat4 projection(1);
-        projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, eyeTexture);
 
+        float R = 10;
+        float x_pos = cos(time) * R;
+        //float y_pos = sin(time) * R;
+        float y_pos = 0;
+        float z_pos = sin(time) * R;
+        //look_at_camera.set(vec3(x_pos, y_pos, z_pos), vec3(0, 0, 0));
+
+        mat4 model(1.0f);
+        //mat4 view = look_at_camera.view();
+        mat4 view = fps_camera.view();
 
         textureShader.use();
         //model = rotate(model, radians(-55.f), vec3(1, 0, 0));
@@ -180,6 +207,12 @@ int main() {
         glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
 
         glBindVertexArray(planeVAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = rotate(model, radians(90.f), vec3(1, 0, 0));
+        glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        model = rotate(model, radians(90.f), vec3(0, 1, 0));
+        glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         cubeShader.use();
@@ -210,6 +243,7 @@ int main() {
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
         }
 
+        process_input(window);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -239,7 +273,11 @@ static void load2DTexture(uint &id, const std::string &path, bool alpha) {
 }
 
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
+    projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    // mouse coordinates now are not the same
 }
 
 static void error_callback(int error, const char *description) {
@@ -249,4 +287,38 @@ static void error_callback(int error, const char *description) {
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+static void process_input(GLFWwindow *window) {
+    int trackable_keys[] = {
+            GLFW_KEY_W,
+            GLFW_KEY_A,
+            GLFW_KEY_S,
+            GLFW_KEY_D,
+            GLFW_KEY_Q,
+            GLFW_KEY_E,
+            GLFW_KEY_Z,
+            GLFW_KEY_C,
+            GLFW_KEY_SPACE,
+            GLFW_KEY_LEFT_SHIFT
+    };
+
+    for (int trackable_key : trackable_keys) {
+        if (glfwGetKey(window, trackable_key) == GLFW_PRESS)
+            fps_controller.processKey(trackable_key, deltatime);
+    }
+}
+
+static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos) {
+    static bool first_mouse = true;
+    if (first_mouse) {
+        first_mouse = false;
+        last_mouse_x = xpos;
+        last_mouse_y = ypos;
+    }
+    float dx = xpos - last_mouse_x;
+    float dy = ypos - last_mouse_y;
+    last_mouse_x = xpos;
+    last_mouse_y = ypos;
+    fps_controller.process_mouse(dx, dy);
 }

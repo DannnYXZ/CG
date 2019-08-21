@@ -10,7 +10,6 @@ CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o
 CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glad/glad.h
  ../deps/glfw/include/GLFW/glfw3.h
- ../deps/glm/./detail/setup.hpp
  ../deps/glm/./detail/type_mat2x2.hpp
  ../deps/glm/./detail/type_mat2x2.inl
  ../deps/glm/./detail/type_mat2x3.hpp
@@ -149,6 +148,8 @@ CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glm/ext/quaternion_common_simd.inl
  ../deps/glm/ext/quaternion_double.hpp
  ../deps/glm/ext/quaternion_double_precision.hpp
+ ../deps/glm/ext/quaternion_exponential.hpp
+ ../deps/glm/ext/quaternion_exponential.inl
  ../deps/glm/ext/quaternion_float.hpp
  ../deps/glm/ext/quaternion_float_precision.hpp
  ../deps/glm/ext/quaternion_geometric.hpp
@@ -188,6 +189,9 @@ CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glm/gtc/type_ptr.hpp
  ../deps/glm/gtc/type_ptr.inl
  ../deps/glm/gtc/vec1.hpp
+ ../deps/glm/gtx/norm.hpp
+ ../deps/glm/gtx/norm.inl
+ ../deps/glm/gtx/quaternion.hpp
  ../deps/glm/integer.hpp
  ../deps/glm/mat2x2.hpp
  ../deps/glm/mat2x3.hpp
@@ -212,5 +216,8 @@ CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glm/vec4.hpp
  ../deps/glm/vector_relational.hpp
  ../deps/stb_image/stb_image.h
+ /home/noroot/projects/CG/src/camera_controller.h
+ /home/noroot/projects/CG/src/fps_camera.h
+ /home/noroot/projects/CG/src/look_at_camera.h
  /home/noroot/projects/CG/src/main.cpp
  /home/noroot/projects/CG/src/shader.h
