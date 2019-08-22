@@ -4,15 +4,15 @@
 #include <GLFW/glfw3.h>
 #include "fps_camera.h"
 
-class CameraController {
+class FPSCameraController {
 private:
     FPSCamera *camera;
 public:
     float MOVE_SPEED = 10.0f;
-    float ROT_SPEED = 2.0f;
+    float ROT_SPEED = 1.5f;
     float MOUSE_SENSITIVITY = 0.005f;
 
-    CameraController(FPSCamera *camera) {
+    FPSCameraController(FPSCamera *camera) {
         this->camera = camera;
     }
 

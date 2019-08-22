@@ -86,7 +86,7 @@ float texCoords[] = {
 
 LookAtCamera look_at_camera(vec3(0, 0, 3), vec3(0, 0, 0), vec3(0, 1, 0));
 FPSCamera fps_camera(vec3(0, 0, 3));
-CameraController fps_controller(&fps_camera);
+FPSCameraController fps_controller(&fps_camera);
 float timestamp;
 float deltatime;
 double last_mouse_x, last_mouse_y;
@@ -115,10 +115,12 @@ int main() {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
     Shader rainbowShader("shaders/rainbowShader.vs", "shaders/rainbowShader.fs");
     Shader posColorShader("shaders/posColor.vs", "shaders/posColor.fs");
     Shader textureShader("shaders/texture.vs", "shaders/texture.fs");
     Shader cubeShader("shaders/3D.vs", "shaders/3D.fs");
+    Shader pointsShader("shaders/point.vs", "shaders/point.fs");
 
     uint planeVAO, planeVBO, EBO;
     glGenVertexArrays(1, &planeVAO);
@@ -172,10 +174,17 @@ int main() {
     uint cubeViewUniform = glGetUniformLocation(cubeShader.ID, "view");
     uint cubeProjUniform = glGetUniformLocation(cubeShader.ID, "projection");
 
-    glLineWidth(3);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    uint pointsModelUniform = glGetUniformLocation(pointsShader.ID, "model");
+    uint pointsViewUniform = glGetUniformLocation(pointsShader.ID, "view");
+    uint pointsProjUniform = glGetUniformLocation(pointsShader.ID, "projection");
+
+
+    glLineWidth(1);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glPointSize(15.f);
     while (!glfwWindowShouldClose(window)) {
         float time = glfwGetTime();
         deltatime = time - timestamp;
@@ -194,18 +203,28 @@ int main() {
         //float y_pos = sin(time) * R;
         float y_pos = 0;
         float z_pos = sin(time) * R;
-        //look_at_camera.set(vec3(x_pos, y_pos, z_pos), vec3(0, 0, 0));
+        look_at_camera.translate(vec3(x_pos, y_pos, z_pos) * deltatime);
 
         mat4 model(1.0f);
         //mat4 view = look_at_camera.view();
         mat4 view = fps_camera.view();
 
         textureShader.use();
-        //model = rotate(model, radians(-55.f), vec3(1, 0, 0));
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
         glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
 
+        pointsShader.use();
+        glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(model));
+        glUniformMatrix4fv(pointsViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(pointsProjUniform, 1, GL_FALSE, value_ptr(projection));
+        cubeShader.use();
+        glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
+        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
+
+
+        textureShader.use();
         glBindVertexArray(planeVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         model = rotate(model, radians(90.f), vec3(1, 0, 0));
@@ -215,13 +234,9 @@ int main() {
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        cubeShader.use();
-        glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
+
 
         vec3 cubePositions[] = {
-                vec3(0.0f, 0.0f, 0.0f),
                 vec3(2.0f, 5.0f, -15.0f),
                 vec3(-1.5f, -2.2f, -2.5f),
                 vec3(-3.8f, -2.0f, -12.3f),
@@ -234,14 +249,29 @@ int main() {
         };
 
         glBindVertexArray(cubeVAO);
-        for (unsigned int i = 0; i < 10; i++) {
+        for (unsigned int i = 0; i < sizeof(cubePositions) / sizeof(vec3); i++) {
             float angle = 20.0f * i;
             mat4 _model(1.f);
             _model = translate(_model, cubePositions[i]);
             _model = rotate(_model, radians(angle), vec3(1.0f, 0.3f, 0.5f));
+            cubeShader.use();
             glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(_model));
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+            pointsShader.use();
+            glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(_model));
+            glDrawArrays(GL_POINTS, 0, 24);
         }
+
+
+        cubeShader.use();
+        model = mat4(1);
+        //quat q = angleAxis(radians(45.f), normalize(vec3(1,1,0)));
+        static quat q = angleAxis(time, normalize(vec3(1,0,0)));
+        quat p = angleAxis(0.1f, normalize(vec3(1,1,0)));
+        q *= p;
+        model = toMat4(q) * model;
+        glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
 
         process_input(window);
         glfwSwapBuffers(window);
