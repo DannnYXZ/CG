@@ -3,16 +3,16 @@
 #include <iostream>
 #include <cmath>
 #include <stb_image/stb_image.h>
-#include "shader.h"
-#include "look_at_camera.h"
-#include "fps_camera.h"
-#include "camera_controller.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+
+#include "shader.h"
+#include "look_at_camera.h"
+#include "fps_camera.h"
+#include "camera_controller.h"
 
 using namespace glm;
 
@@ -38,6 +38,11 @@ float vertices[] = {
         -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,   // bottom left
         -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0    // top left
 };
+
+struct Settings {
+    GLenum PolygonMode = GL_FILL;
+    bool drawPoints = true;
+} settings;
 
 float cube[] = {
         // front
@@ -91,17 +96,16 @@ float timestamp;
 float deltatime;
 double last_mouse_x, last_mouse_y;
 
-
-mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
-
 int main() {
     glfwSetErrorCallback(error_callback);
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_DEPTH_BITS, 16);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
-    if (window == NULL) {
+    if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -180,23 +184,27 @@ int main() {
 
 
     glLineWidth(1);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glPointSize(15.f);
+    //glPointSize(15.f);
     while (!glfwWindowShouldClose(window)) {
-        float time = glfwGetTime();
-        deltatime = time - timestamp;
-        timestamp = time;
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        //glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
+        glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glPolygonMode(GL_FRONT_AND_BACK, settings.PolygonMode);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, eyeTexture);
+
+
+        mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+        float time = glfwGetTime();
+        deltatime = time - timestamp;
+        timestamp = time;
 
         float R = 10;
         float x_pos = cos(time) * R;
@@ -235,7 +243,6 @@ int main() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
-
         vec3 cubePositions[] = {
                 vec3(2.0f, 5.0f, -15.0f),
                 vec3(-1.5f, -2.2f, -2.5f),
@@ -257,17 +264,19 @@ int main() {
             cubeShader.use();
             glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(_model));
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
-            pointsShader.use();
-            glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(_model));
-            glDrawArrays(GL_POINTS, 0, 24);
+            if (settings.drawPoints) {
+                pointsShader.use();
+                glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(_model));
+                glDrawArrays(GL_POINTS, 0, 24);
+            }
         }
 
 
         cubeShader.use();
         model = mat4(1);
         //quat q = angleAxis(radians(45.f), normalize(vec3(1,1,0)));
-        static quat q = angleAxis(time, normalize(vec3(1,0,0)));
-        quat p = angleAxis(0.1f, normalize(vec3(1,1,0)));
+        static quat q = angleAxis(time, normalize(vec3(1, 0, 0)));
+        quat p = angleAxis(0.1f, normalize(vec3(1, 1, 0)));
         q *= p;
         model = toMat4(q) * model;
         glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
@@ -305,7 +314,6 @@ static void load2DTexture(uint &id, const std::string &path, bool alpha) {
 static void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     SCR_WIDTH = width;
     SCR_HEIGHT = height;
-    projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     // mouse coordinates now are not the same
 }
@@ -317,6 +325,14 @@ static void error_callback(int error, const char *description) {
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        if (settings.PolygonMode == GL_LINE)
+            settings.PolygonMode = GL_FILL;
+        else
+            settings.PolygonMode = GL_LINE;
+    }
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+        settings.drawPoints = !settings.drawPoints;
 }
 
 static void process_input(GLFWwindow *window) {
