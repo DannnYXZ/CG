@@ -10,6 +10,7 @@ CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o
 CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glad/glad.h
  ../deps/glfw/include/GLFW/glfw3.h
+ ../deps/glm/./detail/setup.hpp
  ../deps/glm/./detail/type_mat2x2.hpp
  ../deps/glm/./detail/type_mat2x2.inl
  ../deps/glm/./detail/type_mat2x3.hpp
@@ -216,8 +217,11 @@ CMakeFiles/CG.dir/src/main.cpp.o
  ../deps/glm/vec4.hpp
  ../deps/glm/vector_relational.hpp
  ../deps/stb_image/stb_image.h
- /home/noroot/projects/CG/src/camera_controller.h
- /home/noroot/projects/CG/src/fps_camera.h
- /home/noroot/projects/CG/src/look_at_camera.h
+ /home/noroot/projects/CG/src/arcball_camera_controller.h
+ /home/noroot/projects/CG/src/camera/arcball_camera.h
+ /home/noroot/projects/CG/src/camera/fps_camera.h
+ /home/noroot/projects/CG/src/camera/look_at_camera.h
+ /home/noroot/projects/CG/src/fps_camera_controller.h
  /home/noroot/projects/CG/src/main.cpp
  /home/noroot/projects/CG/src/shader.h
+ /home/noroot/projects/CG/src/utils.h

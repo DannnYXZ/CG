@@ -54,6 +54,18 @@ GL/glu.h
 vulkan/vulkan.h
 -
 
+../deps/glm/./detail/setup.hpp
+cassert
+-
+cstddef
+-
+../simd/platform.h
+../deps/glm/./simd/platform.h
+cstdint
+-
+type_traits
+-
+
 ../deps/glm/./detail/type_mat2x2.hpp
 type_vec2.hpp
 ../deps/glm/./detail/type_vec2.hpp
@@ -1510,21 +1522,37 @@ intrin.h
 arm_neon.h
 -
 
-/home/noroot/projects/CG/src/camera_controller.h
+/home/noroot/projects/CG/src/arcball_camera_controller.h
+camera/arcball_camera.h
+/home/noroot/projects/CG/src/camera/arcball_camera.h
+utils.h
+/home/noroot/projects/CG/src/utils.h
+glm/glm.hpp
+-
 GLFW/glfw3.h
 -
-fps_camera.h
-/home/noroot/projects/CG/src/fps_camera.h
 
-/home/noroot/projects/CG/src/fps_camera.h
+/home/noroot/projects/CG/src/camera/arcball_camera.h
+glm/glm.hpp
+-
+glm/detail/type_quat.hpp
+-
+
+/home/noroot/projects/CG/src/camera/fps_camera.h
 glm/glm.hpp
 -
 glm/gtc/constants.hpp
 -
 
-/home/noroot/projects/CG/src/look_at_camera.h
+/home/noroot/projects/CG/src/camera/look_at_camera.h
 glm/glm.hpp
 -
+
+/home/noroot/projects/CG/src/fps_camera_controller.h
+GLFW/glfw3.h
+-
+camera/fps_camera.h
+/home/noroot/projects/CG/src/camera/fps_camera.h
 
 /home/noroot/projects/CG/src/main.cpp
 glad/glad.h
@@ -1537,14 +1565,6 @@ cmath
 -
 stb_image/stb_image.h
 -
-shader.h
-/home/noroot/projects/CG/src/shader.h
-look_at_camera.h
-/home/noroot/projects/CG/src/look_at_camera.h
-fps_camera.h
-/home/noroot/projects/CG/src/fps_camera.h
-camera_controller.h
-/home/noroot/projects/CG/src/camera_controller.h
 glm/glm.hpp
 -
 glm/gtc/matrix_transform.hpp
@@ -1555,6 +1575,20 @@ glm/gtc/quaternion.hpp
 -
 glm/gtx/quaternion.hpp
 -
+shader.h
+/home/noroot/projects/CG/src/shader.h
+camera/look_at_camera.h
+/home/noroot/projects/CG/src/camera/look_at_camera.h
+camera/fps_camera.h
+/home/noroot/projects/CG/src/camera/fps_camera.h
+fps_camera_controller.h
+/home/noroot/projects/CG/src/fps_camera_controller.h
+camera/arcball_camera.h
+/home/noroot/projects/CG/src/camera/arcball_camera.h
+arcball_camera_controller.h
+/home/noroot/projects/CG/src/arcball_camera_controller.h
+utils.h
+/home/noroot/projects/CG/src/utils.h
 
 /home/noroot/projects/CG/src/shader.h
 glad/glad.h
@@ -1566,5 +1600,13 @@ fstream
 sstream
 -
 iostream
+-
+
+/home/noroot/projects/CG/src/utils.h
+iostream
+-
+glm/glm.hpp
+-
+glm/detail/type_quat.hpp
 -
 

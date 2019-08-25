@@ -288,16 +288,25 @@
 		<Unit filename="/home/noroot/projects/CG/deps/stb_image/stb_image.h">
 			<Option target="CG"/>
 		</Unit>
-		<Unit filename="/home/noroot/projects/CG/src/camera_controller.h">
+		<Unit filename="/home/noroot/projects/CG/src/arcball_camera_controller.h">
 			<Option target="CG"/>
 		</Unit>
-		<Unit filename="/home/noroot/projects/CG/src/fps_camera.h">
+		<Unit filename="/home/noroot/projects/CG/src/camera/arcball_camera.h">
 			<Option target="CG"/>
 		</Unit>
-		<Unit filename="/home/noroot/projects/CG/src/look_at_camera.h">
+		<Unit filename="/home/noroot/projects/CG/src/camera/fps_camera.h">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/camera/look_at_camera.h">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/fps_camera_controller.h">
 			<Option target="CG"/>
 		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
+			<Option target="CG"/>
+		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/main.h">
 			<Option target="CG"/>
 		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/shader.h">

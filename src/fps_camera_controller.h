@@ -1,8 +1,8 @@
-#ifndef CG_CAMERA_CONTROLLER_H
-#define CG_CAMERA_CONTROLLER_H
+#ifndef CG_FPS_CAMERA_CONTROLLER_H
+#define CG_FPS_CAMERA_CONTROLLER_H
 
 #include <GLFW/glfw3.h>
-#include "fps_camera.h"
+#include "camera/fps_camera.h"
 
 class FPSCameraController {
 private:
@@ -37,4 +37,4 @@ public:
     }
 };
 
-#endif //CG_CAMERA_CONTROLLER_H
+#endif //CG_FPS_CAMERA_CONTROLLER_H

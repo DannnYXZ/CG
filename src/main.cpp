@@ -10,14 +10,17 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "shader.h"
-#include "look_at_camera.h"
-#include "fps_camera.h"
-#include "camera_controller.h"
+#include "camera/look_at_camera.h"
+#include "camera/fps_camera.h"
+#include "fps_camera_controller.h"
+#include "camera/arcball_camera.h"
+#include "arcball_camera_controller.h"
+#include "utils.h"
 
 using namespace glm;
 
-unsigned int SCR_WIDTH = 800;
-unsigned int SCR_HEIGHT = 800;
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 800;
 
 static void error_callback(int error, const char *description);
 
@@ -29,20 +32,22 @@ static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 
 static void load2DTexture(uint &id, const std::string &path, bool alpha = false);
 
+static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+
 static void process_input(GLFWwindow *window);
 
-float vertices[] = {
-        // positions          // colors           // texture coords
-        0.9, 0.9, 0.0, 1.0, 0.0, 0.0, 2.0, 2.0,   // top right
-        0.9, -0.9, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0,   // bottom right
-        -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,   // bottom left
-        -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0    // top left
-};
+static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
-struct Settings {
-    GLenum PolygonMode = GL_FILL;
-    bool drawPoints = true;
-} settings;
+float vertices[] = {
+        // top right
+        0.9, 0.9, 0.0, 1.0, 0.0, 0.0, 2.0, 2.0,
+        // bottom right
+        0.9, -0.9, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0,
+        // bottom left
+        -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        // top left
+        -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0
+};
 
 float cube[] = {
         // front
@@ -91,10 +96,19 @@ float texCoords[] = {
 
 LookAtCamera look_at_camera(vec3(0, 0, 3), vec3(0, 0, 0), vec3(0, 1, 0));
 FPSCamera fps_camera(vec3(0, 0, 3));
+ArcballCamera arcball_camera(identity<quat>(), vec3(0, 0, 0), vec3(0, 0, 5));
+
 FPSCameraController fps_controller(&fps_camera);
+ArcballCamController arcball_controller(&arcball_camera, SCR_WIDTH, SCR_HEIGHT);
 float timestamp;
 float deltatime;
 double last_mouse_x, last_mouse_y;
+
+
+struct {
+    GLenum PolygonMode = GL_FILL;
+    bool drawPoints = true;
+} settings;
 
 int main() {
     glfwSetErrorCallback(error_callback);
@@ -102,18 +116,21 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_DEPTH_BITS, 16);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
+    //glfwMaximizeWindow(window);
+
     if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwSetKeyCallback(window, key_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -169,7 +186,6 @@ int main() {
     cubeShader.setInt("texSampler0", 0);
     cubeShader.setInt("texSampler1", 1);
 
-
     uint planeModelUniform = glGetUniformLocation(textureShader.ID, "model");
     uint planeViewUniform = glGetUniformLocation(textureShader.ID, "view");
     uint planeProjUniform = glGetUniformLocation(textureShader.ID, "projection");
@@ -182,14 +198,12 @@ int main() {
     uint pointsViewUniform = glGetUniformLocation(pointsShader.ID, "view");
     uint pointsProjUniform = glGetUniformLocation(pointsShader.ID, "projection");
 
-
     glLineWidth(1);
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
-    //glPointSize(15.f);
     while (!glfwWindowShouldClose(window)) {
-        //glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
+        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -215,7 +229,8 @@ int main() {
 
         mat4 model(1.0f);
         //mat4 view = look_at_camera.view();
-        mat4 view = fps_camera.view();
+        //mat4 view = fps_camera.view();
+        mat4 view = arcball_camera.view();
 
         textureShader.use();
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
@@ -274,7 +289,6 @@ int main() {
 
         cubeShader.use();
         model = mat4(1);
-        //quat q = angleAxis(radians(45.f), normalize(vec3(1,1,0)));
         static quat q = angleAxis(time, normalize(vec3(1, 0, 0)));
         quat p = angleAxis(0.1f, normalize(vec3(1, 1, 0)));
         q *= p;
@@ -367,4 +381,15 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
     last_mouse_x = xpos;
     last_mouse_y = ypos;
     fps_controller.process_mouse(dx, dy);
+    arcball_controller.mouseMove(xpos, ypos);
+}
+
+static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    double mx, my;
+    glfwGetCursorPos(window, &mx, &my);
+    arcball_controller.mouseButton(button, action, mods, mx, my);
+}
+
+static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    arcball_controller.mouseScroll(xoffset, yoffset);
 }

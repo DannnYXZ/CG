@@ -9,6 +9,7 @@ CMakeFiles/CG.dir/deps/stb_image/stb_image.cpp.o: ../deps/stb_image/stb_image.h
 
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glad/glad.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glfw/include/GLFW/glfw3.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/./detail/setup.hpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/./detail/type_mat2x2.hpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/./detail/type_mat2x2.inl
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/./detail/type_mat2x3.hpp
@@ -215,9 +216,12 @@ CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/vec3.hpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/vec4.hpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/glm/vector_relational.hpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../deps/stb_image/stb_image.h
-CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera_controller.h
-CMakeFiles/CG.dir/src/main.cpp.o: ../src/fps_camera.h
-CMakeFiles/CG.dir/src/main.cpp.o: ../src/look_at_camera.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/arcball_camera_controller.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/arcball_camera.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/fps_camera.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/look_at_camera.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/fps_camera_controller.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/main.cpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/shader.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/utils.h
 
