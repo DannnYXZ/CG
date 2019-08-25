@@ -8,7 +8,7 @@
 
 using namespace std;
 
-class ArcballCamController {
+class ArcballCameraController {
     float EPS = 1e-6;
     float MOUSE_SENS = 3.f;
 private:
@@ -30,7 +30,7 @@ private:
     }
 
 public:
-    ArcballCamController(ArcballCamera *camera, int &scr_width, int &scr_height) : scr_height(scr_height),
+    ArcballCameraController(ArcballCamera *camera, int &scr_width, int &scr_height) : scr_height(scr_height),
                                                                                    scr_width(scr_width) {
         this->camera = camera;
         this->saved_rot = camera->orient;

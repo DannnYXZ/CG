@@ -38,70 +38,13 @@ static void process_input(GLFWwindow *window);
 
 static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
-float vertices[] = {
-        // top right
-        0.9, 0.9, 0.0, 1.0, 0.0, 0.0, 2.0, 2.0,
-        // bottom right
-        0.9, -0.9, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0,
-        // bottom left
-        -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-        // top left
-        -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0
-};
-
-float cube[] = {
-        // front
-        0.5, 0.5, 0.5, 1, 1,
-        0.5, -0.5, 0.5, 1, 0,
-        -0.5, 0.5, 0.5, 0, 1,
-        -0.5, -0.5, 0.5, 0, 0,
-        // back
-        0.5, 0.5, -0.5, 0, 0,
-        0.5, -0.5, -0.5, 1, 0,
-        -0.5, 0.5, -0.5, 0, 1,
-        -0.5, -0.5, -0.5, 1, 1,
-        // left
-        0.5, 0.5, -0.5, 0, 0,
-        0.5, 0.5, 0.5, 1, 0,
-        0.5, -0.5, -0.5, 0, 1,
-        0.5, -0.5, 0.5, 1, 1,
-        // right
-        -0.5, 0.5, -0.5, 0, 0,
-        -0.5, 0.5, 0.5, 1, 0,
-        -0.5, -0.5, -0.5, 0, 1,
-        -0.5, -0.5, 0.5, 1, 1,
-        // up
-        0.5, 0.5, -0.5, 0, 0,
-        0.5, 0.5, 0.5, 1, 0,
-        -0.5, 0.5, -0.5, 0, 1,
-        -0.5, 0.5, 0.5, 1, 1,
-        // down
-        0.5, -0.5, -0.5, 0, 0,
-        0.5, -0.5, 0.5, 1, 0,
-        -0.5, -0.5, -0.5, 0, 1,
-        -0.5, -0.5, 0.5, 1, 1,
-};
-
-uint indices[] = {
-        0, 1, 2,   // first triangle
-        0, 2, 3    // second triangle
-};
-
-float texCoords[] = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.5f, 1.0f
-};
-
-
 LookAtCamera look_at_camera(vec3(0, 0, 3), vec3(0, 0, 0), vec3(0, 1, 0));
 FPSCamera fps_camera(vec3(0, 0, 3));
-ArcballCamera arcball_camera(identity<quat>(), vec3(0, 0, 0), vec3(0, 0, 5));
-
 FPSCameraController fps_controller(&fps_camera);
-ArcballCamController arcball_controller(&arcball_camera, SCR_WIDTH, SCR_HEIGHT);
+ArcballCamera arcball_camera(identity<quat>(), vec3(0, 0, 0), vec3(0, 0, 5));
+ArcballCameraController arcball_controller(&arcball_camera, SCR_WIDTH, SCR_HEIGHT);
 float timestamp;
-float deltatime;
+float loop_deltatime;
 double last_mouse_x, last_mouse_y;
 
 
@@ -119,14 +62,13 @@ int main() {
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
     //glfwMaximizeWindow(window);
-
     if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
     glfwSetKeyCallback(window, key_callback);
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -139,22 +81,48 @@ int main() {
 
     Shader rainbowShader("shaders/rainbowShader.vs", "shaders/rainbowShader.fs");
     Shader posColorShader("shaders/posColor.vs", "shaders/posColor.fs");
-    Shader textureShader("shaders/texture.vs", "shaders/texture.fs");
+    Shader planeShader("shaders/texture.vs", "shaders/texture.fs");
+    uint planeModelUniform = glGetUniformLocation(planeShader.ID, "model");
+    uint planeViewUniform = glGetUniformLocation(planeShader.ID, "view");
+    uint planeProjUniform = glGetUniformLocation(planeShader.ID, "projection");
     Shader cubeShader("shaders/3D.vs", "shaders/3D.fs");
+    uint cubeModelUniform = glGetUniformLocation(cubeShader.ID, "model");
+    uint cubeViewUniform = glGetUniformLocation(cubeShader.ID, "view");
+    uint cubeProjUniform = glGetUniformLocation(cubeShader.ID, "projection");
     Shader pointsShader("shaders/point.vs", "shaders/point.fs");
+    uint pointsModelUniform = glGetUniformLocation(pointsShader.ID, "model");
+    uint pointsViewUniform = glGetUniformLocation(pointsShader.ID, "view");
+    uint pointsProjUniform = glGetUniformLocation(pointsShader.ID, "projection");
 
-    uint planeVAO, planeVBO, EBO;
+    // plane
+    float plane[] = {
+            // top right
+            0.9, 0.9, 0.0, 1.0, 0.0, 0.0, 2.0, 2.0,
+            // bottom right
+            0.9, -0.9, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0,
+            // bottom left
+            -0.9, -0.9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            // top left
+            -0.9, 0.9, 0.0, 1.0, 1.0, 0.0, 0.0, 2.0
+    };
+
+    uint order[] = {
+            0, 1, 3,
+            1, 2, 3
+    };
+
+    uint planeVAO, planeVBO, planeEBO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
-    glGenBuffers(1, &EBO);
+    glGenBuffers(1, &planeEBO);
 
     glBindVertexArray(planeVAO);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(order), order, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(plane), plane, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, 0);
     glEnableVertexAttribArray(0);
@@ -163,6 +131,39 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 32, (void *) (6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    // cube data
+    float cube[] = {
+            // front
+            0.5, 0.5, 0.5, 1, 1,
+            0.5, -0.5, 0.5, 1, 0,
+            -0.5, 0.5, 0.5, 0, 1,
+            -0.5, -0.5, 0.5, 0, 0,
+            // back
+            0.5, 0.5, -0.5, 0, 0,
+            0.5, -0.5, -0.5, 1, 0,
+            -0.5, 0.5, -0.5, 0, 1,
+            -0.5, -0.5, -0.5, 1, 1,
+            // left
+            0.5, 0.5, -0.5, 0, 0,
+            0.5, 0.5, 0.5, 1, 0,
+            0.5, -0.5, -0.5, 0, 1,
+            0.5, -0.5, 0.5, 1, 1,
+            // right
+            -0.5, 0.5, -0.5, 0, 0,
+            -0.5, 0.5, 0.5, 1, 0,
+            -0.5, -0.5, -0.5, 0, 1,
+            -0.5, -0.5, 0.5, 1, 1,
+            // up
+            0.5, 0.5, -0.5, 0, 0,
+            0.5, 0.5, 0.5, 1, 0,
+            -0.5, 0.5, -0.5, 0, 1,
+            -0.5, 0.5, 0.5, 1, 1,
+            // down
+            0.5, -0.5, -0.5, 0, 0,
+            0.5, -0.5, 0.5, 1, 0,
+            -0.5, -0.5, -0.5, 0, 1,
+            -0.5, -0.5, 0.5, 1, 1,
+    };
     uint cubeVAO, cubeVBO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
@@ -176,78 +177,50 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 20, (void *) 12);
     glEnableVertexAttribArray(1);
 
+    // textures
     uint woodTexture, eyeTexture;
     load2DTexture(woodTexture, "assets/container.jpg");
     load2DTexture(eyeTexture, "assets/triangle.png", true);
-    textureShader.use();
-    textureShader.setInt("texSampler0", 0);
-    textureShader.setInt("texSampler1", 1);
+    planeShader.use();
+    planeShader.setInt("texSampler0", 0);
+    planeShader.setInt("texSampler1", 1);
     cubeShader.use();
     cubeShader.setInt("texSampler0", 0);
     cubeShader.setInt("texSampler1", 1);
 
-    uint planeModelUniform = glGetUniformLocation(textureShader.ID, "model");
-    uint planeViewUniform = glGetUniformLocation(textureShader.ID, "view");
-    uint planeProjUniform = glGetUniformLocation(textureShader.ID, "projection");
-
-    uint cubeModelUniform = glGetUniformLocation(cubeShader.ID, "model");
-    uint cubeViewUniform = glGetUniformLocation(cubeShader.ID, "view");
-    uint cubeProjUniform = glGetUniformLocation(cubeShader.ID, "projection");
-
-    uint pointsModelUniform = glGetUniformLocation(pointsShader.ID, "model");
-    uint pointsViewUniform = glGetUniformLocation(pointsShader.ID, "view");
-    uint pointsProjUniform = glGetUniformLocation(pointsShader.ID, "projection");
-
     glLineWidth(1);
     glEnable(GL_DEPTH_TEST);
-
     glEnable(GL_PROGRAM_POINT_SIZE);
+
     while (!glfwWindowShouldClose(window)) {
         //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         glPolygonMode(GL_FRONT_AND_BACK, settings.PolygonMode);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, eyeTexture);
 
-
-        mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
         float time = glfwGetTime();
-        deltatime = time - timestamp;
+        loop_deltatime = time - timestamp;
         timestamp = time;
 
+        // calculating MVP
+        mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
         float R = 10;
-        float x_pos = cos(time) * R;
-        //float y_pos = sin(time) * R;
-        float y_pos = 0;
-        float z_pos = sin(time) * R;
-        look_at_camera.translate(vec3(x_pos, y_pos, z_pos) * deltatime);
-
-        mat4 model(1.0f);
+        vec3 cam_pos(cos(time) * R, 0, sin(time) * R);
+        look_at_camera.translate(vec3(cam_pos.x, cam_pos.y, cam_pos.z) * loop_deltatime);
         //mat4 view = look_at_camera.view();
-        //mat4 view = fps_camera.view();
-        mat4 view = arcball_camera.view();
+        mat4 view = fps_camera.view();
+        //mat4 view = arcball_camera.view();
 
-        textureShader.use();
+        // draw origin planes
+        planeShader.use();
+        mat4 model(1.0f);
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
         glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
-
-        pointsShader.use();
-        glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(model));
-        glUniformMatrix4fv(pointsViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(pointsProjUniform, 1, GL_FALSE, value_ptr(projection));
-        cubeShader.use();
-        glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
-
-
-        textureShader.use();
         glBindVertexArray(planeVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         model = rotate(model, radians(90.f), vec3(1, 0, 0));
@@ -257,7 +230,7 @@ int main() {
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-
+        // scattered cubes
         vec3 cubePositions[] = {
                 vec3(2.0f, 5.0f, -15.0f),
                 vec3(-1.5f, -2.2f, -2.5f),
@@ -269,7 +242,12 @@ int main() {
                 vec3(1.5f, 0.2f, -1.5f),
                 vec3(-1.3f, 1.0f, -1.5f)
         };
-
+        pointsShader.use();
+        glUniformMatrix4fv(pointsViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(pointsProjUniform, 1, GL_FALSE, value_ptr(projection));
+        cubeShader.use();
+        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
+        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
         glBindVertexArray(cubeVAO);
         for (unsigned int i = 0; i < sizeof(cubePositions) / sizeof(vec3); i++) {
             float angle = 20.0f * i;
@@ -286,7 +264,7 @@ int main() {
             }
         }
 
-
+        // rotating cube
         cubeShader.use();
         model = mat4(1);
         static quat q = angleAxis(time, normalize(vec3(1, 0, 0)));
@@ -365,7 +343,7 @@ static void process_input(GLFWwindow *window) {
 
     for (int trackable_key : trackable_keys) {
         if (glfwGetKey(window, trackable_key) == GLFW_PRESS)
-            fps_controller.processKey(trackable_key, deltatime);
+            fps_controller.processKey(trackable_key, loop_deltatime);
     }
 }
 
