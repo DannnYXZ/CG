@@ -16,6 +16,7 @@
 #include "camera/arcball_camera.h"
 #include "arcball_camera_controller.h"
 #include "utils.h"
+#include "hexagons.h"
 
 using namespace glm;
 
@@ -47,6 +48,9 @@ float timestamp;
 float loop_deltatime;
 double last_mouse_x, last_mouse_y;
 
+
+mat4 view;
+mat4 projection;
 
 struct {
     GLenum PolygonMode = GL_FILL;
@@ -188,6 +192,10 @@ int main() {
     cubeShader.setInt("texSampler0", 0);
     cubeShader.setInt("texSampler1", 1);
 
+    // animations
+    HexagonAnimation hexAnim(view, projection);
+    hexAnim.reset();
+
     glLineWidth(1);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -207,12 +215,14 @@ int main() {
         timestamp = time;
 
         // calculating MVP
-        mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+
+        view = fps_camera.view();
+        projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+        //mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
         float R = 10;
         vec3 cam_pos(cos(time) * R, 0, sin(time) * R);
         look_at_camera.translate(vec3(cam_pos.x, cam_pos.y, cam_pos.z) * loop_deltatime);
         //mat4 view = look_at_camera.view();
-        mat4 view = fps_camera.view();
         //mat4 view = arcball_camera.view();
 
         // draw origin planes
@@ -222,13 +232,13 @@ int main() {
         glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
         glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
         glBindVertexArray(planeVAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         model = rotate(model, radians(90.f), vec3(1, 0, 0));
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         model = rotate(model, radians(90.f), vec3(0, 1, 0));
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // scattered cubes
         vec3 cubePositions[] = {
@@ -256,11 +266,11 @@ int main() {
             _model = rotate(_model, radians(angle), vec3(1.0f, 0.3f, 0.5f));
             cubeShader.use();
             glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(_model));
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+            //glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
             if (settings.drawPoints) {
                 pointsShader.use();
                 glUniformMatrix4fv(pointsModelUniform, 1, GL_FALSE, value_ptr(_model));
-                glDrawArrays(GL_POINTS, 0, 24);
+                //glDrawArrays(GL_POINTS, 0, 24);
             }
         }
 
@@ -272,8 +282,10 @@ int main() {
         q *= p;
         model = toMat4(q) * model;
         glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
+        //glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
 
+        // hexagons
+        hexAnim.draw();
         process_input(window);
         glfwSwapBuffers(window);
         glfwPollEvents();

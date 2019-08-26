@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(CG)
 
 set(CMAKE_CXX_STANDARD 14)
-add_executable(CG src/main.cpp deps/glad.c src/shader.h deps/stb_image/stb_image.h deps/stb_image/stb_image.cpp src/camera/look_at_camera.h src/utils.h src/camera/fps_camera.h src/fps_camera_controller.h src/camera/arcball_camera.h src/arcball_camera_controller.h src/main.h)
+add_executable(CG src/main.cpp deps/glad.c src/shader.h deps/stb_image/stb_image.h deps/stb_image/stb_image.cpp src/camera/look_at_camera.h src/utils.h src/camera/fps_camera.h src/fps_camera_controller.h src/camera/arcball_camera.h src/arcball_camera_controller.h src/main.h src/hexagons.h)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

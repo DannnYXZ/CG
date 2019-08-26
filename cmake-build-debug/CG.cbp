@@ -303,6 +303,9 @@
 		<Unit filename="/home/noroot/projects/CG/src/fps_camera_controller.h">
 			<Option target="CG"/>
 		</Unit>
+		<Unit filename="/home/noroot/projects/CG/src/hexagons.h">
+			<Option target="CG"/>
+		</Unit>
 		<Unit filename="/home/noroot/projects/CG/src/main.cpp">
 			<Option target="CG"/>
 		</Unit>
