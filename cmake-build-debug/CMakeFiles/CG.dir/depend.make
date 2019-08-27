@@ -221,6 +221,7 @@ CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/arcball_camera.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/fps_camera.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/camera/look_at_camera.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/fps_camera_controller.h
+CMakeFiles/CG.dir/src/main.cpp.o: ../src/hexagons.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/main.cpp
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/shader.h
 CMakeFiles/CG.dir/src/main.cpp.o: ../src/utils.h

@@ -15,27 +15,22 @@
 using namespace glm;
 using namespace std;
 
-struct Tile {
-    vec3 pos;
-    quat orient;
-};
-
-/* animation state must depend on time
-
-*/
-
 class HexagonAnimation {
-private:
+public:
+    static const int MAX_USED_TILES = 1000;
     uint tileVBO, tileVAO, tileEBO;
+    uint uModel;
     vec3 vertices[6];
     uint order[6] = {0, 5, 1, 4, 2, 3};
-    float R = 1;
+    float R = 0.3;
+    float T = 3.0f; // seconds
+    int DIV = 6;
+    int pieces_drawn = 0;
     double start_time, local_time;
-    uint uView, uProj, uModel;
     mat4 &view;
     mat4 &proj;
-    Shader *shader;
-public:
+    char **used;
+
     HexagonAnimation(mat4 &view, mat4 &proj) : view(view), proj(proj) {
         glGenBuffers(1, &tileVBO);
         glGenBuffers(1, &tileEBO);
@@ -58,63 +53,87 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        shader = new Shader("shaders/hex.vs", "shaders/hex.fs");
-        uView = glGetUniformLocation(shader->ID, "view");
-        uProj = glGetUniformLocation(shader->ID, "proj");
-        uModel = glGetUniformLocation(shader->ID, "model");
+        used = new char *[MAX_USED_TILES];
+        for (int i = 0; i < MAX_USED_TILES; i++) {
+            used[i] = new char[MAX_USED_TILES];
+            fill(used[i], used[i] + MAX_USED_TILES, 0);
+        }
     }
-
-    float T = 3.0f; // seconds
 
     void drawTile(mat4 &model) {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, value_ptr(model));
         glDrawElements(GL_TRIANGLE_STRIP, 6, GL_UNSIGNED_INT, 0);
+        pieces_drawn++;
     }
 
-    void draw(vec3 &start_pos, mat4 &orient_n_pos, int depth) {
-        // if called then start children transforms
-        float time_depth = local_time / T;
-        if (time_depth < depth)
-            return;
-        if (time_depth <= depth + 1) {
-            drawTile(orient_n_pos);
-            return;
+    struct tile_info {
+        int virt_i;
+        int virt_j;
+        int depth;
+        mat4 precalc_model;
+        vec3 start_pos;
+    };
+
+    void bfs_draw() {
+        queue<tile_info> q;
+        q.push(tile_info{0, 0, 0, mat4(1), vec3(0, 0, 0)});
+        used[0][0] = 1;
+        while (!q.empty()) {
+            tile_info tile = q.front();
+            q.pop();
+            // drawing cur_tile
+            float time_depth = local_time / T;
+            if (time_depth < tile.depth)
+                continue;
+            if (time_depth <= tile.depth + 1) {
+                drawTile(tile.precalc_model);
+                continue;
+            }
+            mat4 trans = translate(mat4(1), tile.start_pos);
+            drawTile(trans);
+            // calc child start positions and models
+            double intpart;
+            float child_time = modf(time_depth, &intpart);
+            vec3 rot_shift = vec3(0, 0, R * sqrt(3) / 2);
+            quat rot = angleAxis(-child_time * pi<float>(), vec3(1, 0, 0));
+            mat4 new_model = translate(mat4(1), -rot_shift) * toMat4(rot) * translate(mat4(1), rot_shift);
+            rot_shift *= -2;
+            quat y_q_rot = angleAxis(radians(360.f / DIV), vec3(0, 1, 0));
+            mat4 y_m_rot = toMat4(y_q_rot);
+
+            int di[] = {-2, -1, 1, 2, 1, -1};
+            int dj[] = {0, -1, -1, 0, 1, 1};
+            for (int i = 0; i < 6; i ++) {
+                mat4 child_model = translate(mat4(1), tile.start_pos) * new_model;
+                vec3 child_start_pos = tile.start_pos + rot_shift;
+                int child_i = tile.virt_i + di[i];
+                int child_j = tile.virt_j + dj[i];
+                int wrap_i = mmod(child_i, MAX_USED_TILES);
+                int wrap_j = mmod(child_j, MAX_USED_TILES);
+                if (!used[wrap_i][wrap_j]) {
+                    used[wrap_i][wrap_j] = true;
+                    q.push(tile_info{child_i, child_j, tile.depth + 1, child_model, child_start_pos});
+                }
+                new_model = y_m_rot * new_model;
+                rot_shift = y_q_rot * rot_shift;
+            }
         }
-        mat4 trans = translate(mat4(1), start_pos);
-        drawTile(trans);
-        double intpart;
-        float child_time = modf(time_depth, &intpart);
-        vec3 rot_shift = vec3(0, 0, R * sqrt(3) / 2);
-        quat rot = angleAxis(-child_time * pi<float>(), vec3(1, 0, 0));
-        mat4 new_model = translate(mat4(1), -rot_shift) * toMat4(rot) * translate(mat4(1), rot_shift);
-        rot_shift *= -2;
-        quat y_q_rot = angleAxis(radians(120.f), vec3(0, 1, 0));
-        mat4 y_m_rot = toMat4(y_q_rot);
-        vec3 child_start_pos = start_pos + rot_shift;
-        new_model = translate(mat4(1), start_pos) * new_model;
-        draw(child_start_pos, new_model, depth + 1);
-        new_model = y_m_rot * new_model;
-        child_start_pos = start_pos + y_q_rot * rot_shift;
-        draw(child_start_pos, new_model, depth + 1);
-        new_model = y_m_rot * new_model;
-        child_start_pos = start_pos + y_q_rot * y_q_rot * rot_shift;
-        draw(child_start_pos, new_model, depth + 1);
     }
 
-    // will be called every time
-    void draw() {
+    // will be called every render
+    void draw(Shader &shader) {
         local_time = glfwGetTime() - start_time;
-        shader->use();
-        glUniformMatrix4fv(uView, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(uProj, 1, GL_FALSE, value_ptr(proj));
+        pieces_drawn = 0;
+        shader.use();
+        uModel = glGetUniformLocation(shader.ID, "model");
         glBindVertexArray(tileVAO);
-        mat4 model(1);
-        vec3 origin(0, 0, 0);
-        draw(origin, model, 0);
+        bfs_draw();
+        for (int i = 0; i < MAX_USED_TILES; i++)
+            fill(used[i], used[i] + MAX_USED_TILES, 0);
     }
 
     void reset() {
-        double start_time = glfwGetTime();
+        start_time = glfwGetTime();
     }
 };
 

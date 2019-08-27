@@ -1554,6 +1554,28 @@ GLFW/glfw3.h
 camera/fps_camera.h
 /home/noroot/projects/CG/src/camera/fps_camera.h
 
+/home/noroot/projects/CG/src/hexagons.h
+glad/glad.h
+-
+GLFW/glfw3.h
+-
+glm/glm.hpp
+-
+zconf.h
+-
+glm/detail/type_quat.hpp
+-
+bits/stdc++.h
+-
+glm/ext/quaternion_trigonometric.hpp
+-
+glm/gtx/quaternion.hpp
+-
+glm/gtc/type_ptr.hpp
+-
+shader.h
+/home/noroot/projects/CG/src/shader.h
+
 /home/noroot/projects/CG/src/main.cpp
 glad/glad.h
 -
@@ -1589,6 +1611,8 @@ arcball_camera_controller.h
 /home/noroot/projects/CG/src/arcball_camera_controller.h
 utils.h
 /home/noroot/projects/CG/src/utils.h
+hexagons.h
+/home/noroot/projects/CG/src/hexagons.h
 
 /home/noroot/projects/CG/src/shader.h
 glad/glad.h

@@ -34,4 +34,8 @@ quat fromtwovectors(vec3 u, vec3 v) {
     return normalize(q);
 }
 
+inline int mmod(int a, int b) {
+    return (b + (a % b)) % b;
+}
+
 #endif //CG_UTILS_H

@@ -49,13 +49,16 @@ float loop_deltatime;
 double last_mouse_x, last_mouse_y;
 
 
-mat4 view;
-mat4 projection;
+mat4 global_view;
+mat4 global_proj;
 
 struct {
     GLenum PolygonMode = GL_FILL;
     bool drawPoints = true;
 } settings;
+
+
+HexagonAnimation *hexAnim;
 
 int main() {
     glfwSetErrorCallback(error_callback);
@@ -64,6 +67,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+    //glfwWindowHint(GLFW_SAMPLES, 5);
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
     //glfwMaximizeWindow(window);
     if (window == nullptr) {
@@ -78,6 +82,7 @@ int main() {
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwMakeContextCurrent(window);
+    // glfwSwapInterval(0);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
@@ -97,6 +102,9 @@ int main() {
     uint pointsModelUniform = glGetUniformLocation(pointsShader.ID, "model");
     uint pointsViewUniform = glGetUniformLocation(pointsShader.ID, "view");
     uint pointsProjUniform = glGetUniformLocation(pointsShader.ID, "projection");
+    Shader hexShader("shaders/hex.vs", "shaders/hex.fs");
+    uint hexView = glGetUniformLocation(hexShader.ID, "view");
+    uint hexProj = glGetUniformLocation(hexShader.ID, "proj");
 
     // plane
     float plane[] = {
@@ -193,16 +201,18 @@ int main() {
     cubeShader.setInt("texSampler1", 1);
 
     // animations
-    HexagonAnimation hexAnim(view, projection);
-    hexAnim.reset();
+    hexAnim = new HexagonAnimation(global_view, global_proj);
+    hexAnim->reset();
 
-    glLineWidth(1);
+    glLineWidth(2);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
-
+    //glEnable(GL_MULTISAMPLE);
+    int frames_cnt = 0;
+    double last_fps_time = 0;
     while (!glfwWindowShouldClose(window)) {
-        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClearColor(1.f * 57 / 255, 1.f * 57 / 255, 1.f * 57 / 255, 0.5f);
+        //glClearColor(0.f, 0.f, 0.f, 0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glPolygonMode(GL_FRONT_AND_BACK, settings.PolygonMode);
         glActiveTexture(GL_TEXTURE0);
@@ -210,14 +220,14 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, eyeTexture);
 
-        float time = glfwGetTime();
+        // time stuff
+        double time = glfwGetTime();
         loop_deltatime = time - timestamp;
         timestamp = time;
 
         // calculating MVP
-
-        view = fps_camera.view();
-        projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
+        global_view = fps_camera.view();
+        global_proj = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
         //mat4 projection = perspective(radians(45.f), SCR_WIDTH * 1.f / SCR_HEIGHT, 0.1f, 100.f);
         float R = 10;
         vec3 cam_pos(cos(time) * R, 0, sin(time) * R);
@@ -229,8 +239,8 @@ int main() {
         planeShader.use();
         mat4 model(1.0f);
         glUniformMatrix4fv(planeModelUniform, 1, GL_FALSE, value_ptr(model));
-        glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(projection));
+        glUniformMatrix4fv(planeViewUniform, 1, GL_FALSE, value_ptr(global_view));
+        glUniformMatrix4fv(planeProjUniform, 1, GL_FALSE, value_ptr(global_proj));
         glBindVertexArray(planeVAO);
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         model = rotate(model, radians(90.f), vec3(1, 0, 0));
@@ -253,11 +263,11 @@ int main() {
                 vec3(-1.3f, 1.0f, -1.5f)
         };
         pointsShader.use();
-        glUniformMatrix4fv(pointsViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(pointsProjUniform, 1, GL_FALSE, value_ptr(projection));
+        glUniformMatrix4fv(pointsViewUniform, 1, GL_FALSE, value_ptr(global_view));
+        glUniformMatrix4fv(pointsProjUniform, 1, GL_FALSE, value_ptr(global_proj));
         cubeShader.use();
-        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(view));
-        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(projection));
+        glUniformMatrix4fv(cubeViewUniform, 1, GL_FALSE, value_ptr(global_view));
+        glUniformMatrix4fv(cubeProjUniform, 1, GL_FALSE, value_ptr(global_proj));
         glBindVertexArray(cubeVAO);
         for (unsigned int i = 0; i < sizeof(cubePositions) / sizeof(vec3); i++) {
             float angle = 20.0f * i;
@@ -277,15 +287,26 @@ int main() {
         // rotating cube
         cubeShader.use();
         model = mat4(1);
-        static quat q = angleAxis(time, normalize(vec3(1, 0, 0)));
+        static quat q = angleAxis((float) time, normalize(vec3(1, 0, 0)));
         quat p = angleAxis(0.1f, normalize(vec3(1, 1, 0)));
         q *= p;
         model = toMat4(q) * model;
         glUniformMatrix4fv(cubeModelUniform, 1, GL_FALSE, value_ptr(model));
         //glDrawArrays(GL_TRIANGLE_STRIP, 0, 24);
 
-        // hexagons
-        hexAnim.draw();
+        //hexagons
+        hexShader.use();
+        glUniformMatrix4fv(hexView, 1, GL_FALSE, value_ptr(global_view));
+        glUniformMatrix4fv(hexProj, 1, GL_FALSE, value_ptr(global_proj));
+        hexAnim->draw(hexShader);
+
+        frames_cnt++;
+        if (time - last_fps_time >= 1.0) {
+            printf("%f ms/frame\n", 1000.0 / double(frames_cnt));
+            frames_cnt = 0;
+            last_fps_time += 1.0;
+            cout << hexAnim->pieces_drawn << endl;
+        }
         process_input(window);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -337,6 +358,27 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     }
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
         settings.drawPoints = !settings.drawPoints;
+
+    bool condition = action == GLFW_PRESS || action == GLFW_REPEAT;
+    float dT = 0.01;
+    float d_start_time = 1;
+    if (key == GLFW_KEY_R && condition)
+        hexAnim->start_time -= d_start_time;
+    if (key == GLFW_KEY_F && condition)
+        hexAnim->start_time += d_start_time;
+    if (key == GLFW_KEY_T && condition)
+        hexAnim->T -= dT;
+    if (key == GLFW_KEY_G && condition)
+        hexAnim->T += dT;
+    float dR = 0.05;
+    if (key == GLFW_KEY_Y && condition)
+        hexAnim->R += dR;
+    if (key == GLFW_KEY_H && condition)
+        hexAnim->R -= dR;
+    if (key == GLFW_KEY_U && action == GLFW_PRESS)
+        hexAnim->DIV += 1;
+    if (key == GLFW_KEY_J && action == GLFW_PRESS)
+        hexAnim->DIV -= 1;
 }
 
 static void process_input(GLFWwindow *window) {
